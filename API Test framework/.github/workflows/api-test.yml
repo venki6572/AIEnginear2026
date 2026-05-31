@@ -1,0 +1,39 @@
+name: API Test Framework
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Build and run API tests
+        working-directory: "API Test framework"
+        run: mvn -B test
+
+      - name: Archive test results
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: "API Test framework/target/surefire-reports"
